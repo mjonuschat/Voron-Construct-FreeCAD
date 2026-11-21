@@ -1,0 +1,22 @@
+{
+  "full": {"sha": "root", "truncated": false, "tree": [
+    {"path": "a", "type": "tree", "sha": "sa"},
+    {"path": "a/b", "type": "tree", "sha": "sb"},
+    {"path": "a/b/y.step", "type": "blob", "sha": "y", "size": 3},
+    {"path": "a/x.step", "type": "blob", "sha": "x", "size": 2},
+    {"path": "root.step", "type": "blob", "sha": "r", "size": 1}
+  ]},
+  "root": {"sha": "root", "truncated": true, "tree": [
+    {"path": "a", "type": "tree", "sha": "sa"},
+    {"path": "root.step", "type": "blob", "sha": "r", "size": 1}
+  ]},
+  "subtrees": {
+    "sa": {"sha": "sa", "truncated": false, "tree": [
+      {"path": "b", "type": "tree", "sha": "sb"},
+      {"path": "x.step", "type": "blob", "sha": "x", "size": 2}
+    ]},
+    "sb": {"sha": "sb", "truncated": false, "tree": [
+      {"path": "y.step", "type": "blob", "sha": "y", "size": 3}
+    ]}
+  }
+}
