@@ -1,0 +1,11 @@
+{
+  "autodeskProduct": "Fusion",
+  "type": "script",
+  "id": "b7f3c1de-5a42-4c8e-9d1a-3e6f0a2c7b94",
+  "author": "AstoCAD Construct",
+  "description": "Exports a STEP file next to every .f3d/.f3z that has none.",
+  "version": "0.1.0",
+  "runOnStartup": false,
+  "supportedOS": "windows|mac",
+  "editEnabled": true
+}
