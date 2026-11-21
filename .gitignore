@@ -1,0 +1,8 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment and tool caches
+.venv/
+.pytest_cache/
+.ruff_cache/
