@@ -10,4 +10,10 @@
     <url type="bugtracker">https://github.com/mjonuschat/Voron-Construct-FreeCAD/issues</url>
     <url type="readme">https://github.com/mjonuschat/Voron-Construct-FreeCAD/blob/main/README.md</url>
     <icon>Resources/icons/construct.svg</icon>
+    <content>
+        <workbench>
+            <name>Voron Construct</name>
+            <subdirectory>./</subdirectory>
+        </workbench>
+    </content>
 </package>
