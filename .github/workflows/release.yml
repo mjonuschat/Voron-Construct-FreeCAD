@@ -1,0 +1,101 @@
+name: Release
+# scripts/release.sh bumps the version in package.xml, commits it and tags v<version>. Pushing
+# the tag starts this workflow. It checks the tag, runs the same checks as CI, and only when
+# they pass publishes a release with the addon zip and its checksum. The release notes come
+# from the Conventional Commits through git-cliff.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+-**'  # Pre-release versions
+      - 'v[0-9]+.[0-9]+.[0-9]+'     # Release versions
+  # Runs the checks without publishing a release.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify the tag
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check that the tagged commit is on main
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Tag ${GITHUB_REF_NAME} is not on main."
+            exit 1
+          fi
+      - name: Check that the tag matches the package version
+        run: |
+          VERSION=$(sed -n 's#.*<version>\(.*\)</version>.*#\1#p' Construct/package.xml)
+          if [ "${GITHUB_REF_NAME}" != "v${VERSION}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version v${VERSION}."
+            exit 1
+          fi
+
+  # A skipped `verify` (a manual run) does not block.
+  ci:
+    name: CI
+    needs: [verify]
+    if: ${{ !cancelled() && (needs.verify.result == 'success' || needs.verify.result == 'skipped') }}
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  publish:
+    name: Publish release
+    needs: [ci]
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Build the addon zip
+        run: |
+          DIR="Voron-Construct-FreeCAD"
+          NAME="${DIR}-${GITHUB_REF_NAME}"
+          mkdir -p build dist
+          cp -R Construct "build/${DIR}"
+          cp LICENSE "build/${DIR}/LICENSE"
+          (cd build && zip -qr "../dist/${NAME}.zip" "${DIR}")
+          (cd dist && sha256sum "${NAME}.zip" > "${NAME}.zip.sha256")
+      - name: Check the zip
+        run: |
+          DIR="Voron-Construct-FreeCAD"
+          NAME="${DIR}-${GITHUB_REF_NAME}"
+          unzip -l "dist/${NAME}.zip"
+          for file in InitGui.py package.xml LICENSE; do
+            unzip -l "dist/${NAME}.zip" "${DIR}/${file}" > /dev/null || { echo "missing ${file}"; exit 1; }
+          done
+          test "$(find dist -type f | wc -l)" -eq 2
+      - name: Generate release notes
+        id: changelog
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGES.md
+      - name: Upload the assets to the release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/*
+          file_glob: true
+          tag: ${{ github.ref }}
+          release_name: ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          overwrite: true
+          body: ${{ steps.changelog.outputs.content }}
