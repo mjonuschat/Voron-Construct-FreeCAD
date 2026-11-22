@@ -2,7 +2,7 @@
 <package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
     <name>Construct</name>
     <description>Browse the Voron Construct parts library and import STEP parts</description>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <date>2026-11-21</date>
     <maintainer email="mjonuschat@gmail.com">Morton Jonuschat</maintainer>
     <license>GPL-3.0-only</license>
